@@ -1,0 +1,48 @@
+services:
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable-tensorrt
+    container_name: frigate
+    privileged: true 
+    restart: unless-stopped
+    shm_size: 1024mb  
+    env_file:
+      - .env 
+    # Проброс GPU и устройств
+    devices:
+      - /dev/dri:/dev/dri  
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      - /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/video11:/dev/video11
+    
+    # Runtime для NVIDIA
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - FRIGATE_RTSP_PASSWORD=${FRIGATE_RTSP_PASSWORD}
+    
+    volumes:
+      - ./config_frigate:/config  
+      - /mnt/media/nvr:/media/frigate 
+      - /etc/localtime:/etc/localtime:ro
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1G   
+    
+    ports:
+      - "5000:5000"  
+      - "8971:8971"
+      - "1935:1935"  
+      - "8554:8554"  
+
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
